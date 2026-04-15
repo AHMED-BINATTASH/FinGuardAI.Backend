@@ -8,19 +8,23 @@ namespace FinGuardAI.Business.Mappings
 
     public class FinancialRequestProfile : Profile
     {
+
         public FinancialRequestProfile()
         {
-            // من Entity إلى DTO (للعرض)
-            CreateMap<FinancialRequest, FinancialResponseDTO.FinancialRequestDto>()
-                .ForMember(dest => dest.CreatorName, opt => opt.MapFrom(src => src.Creator.UserName));
+            // Mapping from Entity to DTO
+            CreateMap<FinancialRequest, FinancialRequestDto>()
+                .ForMember(dest => dest.RequestCategory,
+                           opt => opt.MapFrom(src => src.RequestCategory.ToString()));
 
-            // من DTO إلى Entity (للإضافة والتحديث)
-            CreateMap<FinancialResponseDTO.FinancialRequestDto, FinancialRequest>()
-                .ForMember(dest => dest.Creator, opt => opt.Ignore())   // تجاهل كائن المستخدم كاملاً
-                .ForMember(dest => dest.Response, opt => opt.Ignore()) // تجاهل كائن الرد
-                .ForMember(dest => dest.Id, opt => opt.Ignore());      // تجاهل الـ ID في حالة الإضافة (Add)
+            // Mapping from DTO to Entity (Optional, if you need to save data)
+            CreateMap<FinancialRequestDto, FinancialRequest>()
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.RequestCategory,
+                           opt => opt.MapFrom(src => Enum.Parse<FinancialRequest.Categories>(src.RequestCategory)));
+
+
         }
     }
-
-
 }
+
+
