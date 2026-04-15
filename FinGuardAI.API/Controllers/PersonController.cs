@@ -25,27 +25,27 @@ namespace FinGuardAI.API.Controllers
 
 
         [HttpGet("all")]
-        public async Task<ActionResult<IEnumerable<Person>>> GetAll()
+        public async Task<ActionResult<IEnumerable<PersonDto>>> GetAll()
         {
 
-            IEnumerable<Person> StudentsList = await _personService.GetAll();
-            if (StudentsList.Count() == 0)
+            var People = await _personService.GetAll();
+            if (People == null || !People.Any())
             {
-                return NotFound("No Students Found!");
+                return NotFound("No People Found!");
             }
-            return Ok(StudentsList); // Returns the list of students
+            return Ok(_mapper.Map<IEnumerable<PersonDto>>(People)); ;
 
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Person>> GetById(int id)
+        public async Task<ActionResult<PersonDto>> GetById(int id)
         {
             var person = await _personService.GetByID(id);
             if (person == null)
             {
                 return NotFound($"Person with ID {id} not found.");
             }
-            return Ok(person);
+            return Ok(_mapper.Map<PersonDto>(person));
         }
 
 
@@ -55,8 +55,8 @@ namespace FinGuardAI.API.Controllers
         {
             if (personDto == null) return BadRequest();
 
-            
-            if (await _personService.IsExistByNationalID(personDto.NationalID))
+
+            if (await _personService.IsExistByNationalID(personDto.NationalId))
             {
                 return BadRequest("National ID already exists.");
             }
@@ -68,26 +68,26 @@ namespace FinGuardAI.API.Controllers
             if (!result)
                 return StatusCode(500, "A problem occurred while handling your request.");
 
-            personDto.PersonID = personEntity.Id;
+            personDto.Id = personEntity.Id;
 
-            return CreatedAtAction(nameof(GetById), new { id = personDto.PersonID }, personDto);
+            return CreatedAtAction(nameof(GetById), new { id = personDto.Id }, personDto);
         }
 
         [HttpPut("Update")]
         public async Task<ActionResult> Update([FromBody] PersonDto personDto)
         {
             // 1. التأكد أن الـ ID موجود داخل الـ DTO المرسل
-            if (personDto.PersonID <= 0)
+            if (personDto.Id <= 0)
             {
                 return BadRequest("A valid PersonID is required in the request body.");
             }
 
             // 2. البحث عن الشخص في قاعدة البيانات باستخدام الـ ID الموجود في الـ DTO
-            var existingPerson = await _personService.GetByID(personDto.PersonID);
+            var existingPerson = await _personService.GetByID(personDto.Id);
 
             if (existingPerson == null)
             {
-                return NotFound($"Person with ID {personDto.PersonID} not found.");
+                return NotFound($"Person with ID {personDto.Id} not found.");
             }
 
             // 3. نقل البيانات من الـ DTO إلى الكائن الأصلي (Existing Entity)
@@ -102,7 +102,7 @@ namespace FinGuardAI.API.Controllers
                 return StatusCode(500, "An error occurred while updating the person.");
             }
 
-            return Ok(new { message = "Updated successfully", id = personDto.PersonID });
+            return Ok(new { message = "Updated successfully", id = personDto.Id });
         }
 
         [HttpDelete("Delete")]
