@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FinGuardAI.DataAccess.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260413202719_Edit_Relations")]
-    partial class Edit_Relations
+    [Migration("20260415194047_FixFinancialRequestRelationship")]
+    partial class FixFinancialRequestRelationship
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -110,10 +110,7 @@ namespace FinGuardAI.DataAccess.Migrations
             modelBuilder.Entity("FinGuardAI.DataAccess.Entities.FinancialResponse", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("AcceptedAmount")
                         .HasColumnType("decimal(18,2)");
@@ -145,9 +142,6 @@ namespace FinGuardAI.DataAccess.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CreatedBy");
-
-                    b.HasIndex("RequestId")
-                        .IsUnique();
 
                     b.ToTable("FinancialResponses", (string)null);
                 });
@@ -262,7 +256,7 @@ namespace FinGuardAI.DataAccess.Migrations
 
                     b.HasOne("FinGuardAI.DataAccess.Entities.FinancialRequest", "Request")
                         .WithOne("Response")
-                        .HasForeignKey("FinGuardAI.DataAccess.Entities.FinancialResponse", "RequestId")
+                        .HasForeignKey("FinGuardAI.DataAccess.Entities.FinancialResponse", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -275,7 +269,9 @@ namespace FinGuardAI.DataAccess.Migrations
                 {
                     b.HasOne("FinGuardAI.DataAccess.Entities.Person", "Person")
                         .WithOne("User")
-                        .HasForeignKey("FinGuardAI.DataAccess.Entities.User", "PersonId");
+                        .HasForeignKey("FinGuardAI.DataAccess.Entities.User", "PersonId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("Person");
                 });
