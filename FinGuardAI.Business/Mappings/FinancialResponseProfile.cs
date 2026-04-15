@@ -6,14 +6,11 @@ public class FinancialResponseProfile : Profile
 {
     public FinancialResponseProfile()
     {
-        // من Entity إلى DTO
-        CreateMap<FinancialResponse, FinancialResponseDto>()
-            .ForMember(dest => dest.CreatorName, opt => opt.MapFrom(src => src.Creator.UserName));
+      
+        CreateMap<FinancialResponse, FinancialResponseDto>();
 
-        // من DTO إلى Entity
-        CreateMap<FinancialResponseDto, FinancialResponse>()
-            .ForMember(dest => dest.Request, opt => opt.Ignore())
-            .ForMember(dest => dest.Creator, opt => opt.Ignore())
-            .ForMember(dest => dest.Id, opt => opt.Ignore());
+   
+        CreateMap<FinancialResponseDto, FinancialResponse>();
+
     }
 }

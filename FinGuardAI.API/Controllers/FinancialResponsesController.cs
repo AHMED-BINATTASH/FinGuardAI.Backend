@@ -49,23 +49,20 @@ namespace FinGuardAI.API.Controllers
         {
             if (responseDto == null) return BadRequest();
 
-            // 1. تحويل الـ DTO إلى Entity
+           
             var responseEntity = _mapper.Map<FinancialResponse>(responseDto);
 
-            // 2. إسناد المعرفات يدوياً
-            // هنا نسند الـ User ID (مثلاً 1 للتجربة)
-            responseEntity.CreatedBy = 1;
             responseEntity.CreatedAt = DateTime.Now;
 
-            // 3. الحفظ
+          
             var result = await _responseService.AddNew(responseEntity);
 
             if (!result)
                 return StatusCode(500, "A problem occurred while saving the response.");
 
             // 4. العودة بالـ DTO المحدث
-            var resultDto = _mapper.Map<FinancialResponseDto>(responseEntity);
-            return CreatedAtAction(nameof(GetById), new { id = resultDto.Id }, resultDto);
+            //var resultDto = _mapper.Map<FinancialResponseDto>(responseEntity);
+            return CreatedAtAction(nameof(GetById), new { id = responseEntity.Id }, responseDto);
         }
 
         [HttpPut("Update")]
