@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using FinGuardAI.API.Utilities;
 using FinGuardAI.Business.Services;
 using FinGuardAI.DataAccess.DTOs;
 using FinGuardAI.DataAccess.Entities;
@@ -31,9 +32,12 @@ namespace FinGuardAI.API.Controllers
             var People = await _personService.GetAll();
             if (People == null || !People.Any())
             {
-                return NotFound("No People Found!");
+                return NotFound(ApiResponse<PersonDto>.FailureResponse(ResultCode.NotFound));
             }
-            return Ok(_mapper.Map<IEnumerable<PersonDto>>(People)); ;
+
+            var PeopleDto = _mapper.Map<IEnumerable<PersonDto>>(People);
+
+            return Ok(ApiResponse<IEnumerable<PersonDto>>.SuccessResponse(PeopleDto, ResultCode.Found));
 
         }
 
@@ -43,9 +47,11 @@ namespace FinGuardAI.API.Controllers
             var person = await _personService.GetByID(id);
             if (person == null)
             {
-                return NotFound($"Person with ID {id} not found.");
+                return NotFound(ApiResponse<PersonDto>.FailureResponse(ResultCode.NotFound));
             }
-            return Ok(_mapper.Map<PersonDto>(person));
+
+            var personDto = _mapper.Map<PersonDto>(person);
+            return Ok(ApiResponse<PersonDto>.SuccessResponse(personDto, ResultCode.Found));
         }
 
 
@@ -58,7 +64,7 @@ namespace FinGuardAI.API.Controllers
 
             if (await _personService.IsExistByNationalID(personDto.NationalId))
             {
-                return BadRequest("National ID already exists.");
+                return BadRequest(ApiResponse<PersonDto>.FailureResponse(ResultCode.AlreadyExists));
             }
 
             var personEntity = _mapper.Map<Person>(personDto);
@@ -66,11 +72,11 @@ namespace FinGuardAI.API.Controllers
             var result = await _personService.AddNew(personEntity);
 
             if (!result)
-                return StatusCode(500, "A problem occurred while handling your request.");
+                return StatusCode(500, ApiResponse<PersonDto>.FailureResponse(ResultCode.InternalError));
 
             personDto.Id = personEntity.Id;
 
-            return CreatedAtAction(nameof(GetById), new { id = personDto.Id }, personDto);
+            return CreatedAtAction(nameof(GetById), new { id = personDto.Id }, ApiResponse<PersonDto>.SuccessResponse(personDto, ResultCode.Created));
         }
 
         [HttpPut("Update")]
@@ -79,7 +85,7 @@ namespace FinGuardAI.API.Controllers
             // 1. التأكد أن الـ ID موجود داخل الـ DTO المرسل
             if (personDto.Id <= 0)
             {
-                return BadRequest("A valid PersonID is required in the request body.");
+                return BadRequest(ApiResponse<PersonDto>.FailureResponse(ResultCode.InvalidRequest));
             }
 
             // 2. البحث عن الشخص في قاعدة البيانات باستخدام الـ ID الموجود في الـ DTO
@@ -87,7 +93,7 @@ namespace FinGuardAI.API.Controllers
 
             if (existingPerson == null)
             {
-                return NotFound($"Person with ID {personDto.Id} not found.");
+                return NotFound(ApiResponse<PersonDto>.FailureResponse(ResultCode.NotFound));
             }
 
             // 3. نقل البيانات من الـ DTO إلى الكائن الأصلي (Existing Entity)
@@ -99,19 +105,19 @@ namespace FinGuardAI.API.Controllers
 
             if (!success)
             {
-                return StatusCode(500, "An error occurred while updating the person.");
+                return StatusCode(500, ApiResponse<PersonDto>.FailureResponse(ResultCode.InternalError));
             }
 
-            return Ok(new { message = "Updated successfully", id = personDto.Id });
+            return Ok(ApiResponse<PersonDto>.SuccessResponse(personDto, ResultCode.Updated));
         }
 
         [HttpDelete("Delete")]
         public async Task<ActionResult> Delete(int id)
         {
             var success = await _personService.Delete(id);
-            if (!success) return NotFound();
+            if (!success) return NotFound(ApiResponse<PersonDto>.FailureResponse(ResultCode.NotFound));
 
-            return Ok(new { message = "Deleted successfully", id = id });
+            return Ok(ApiResponse<PersonDto>.SuccessResponse(null, ResultCode.Deleted));
         }
     }
 }

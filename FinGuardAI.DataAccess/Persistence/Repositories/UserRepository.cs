@@ -26,20 +26,17 @@ namespace WMS.Infrastructure.Persistence.Repositories
             return await Save();
         }
 
-        //public async Task<bool> Delete(int id)
-        //{
-        //    User user = await _dbContext.Users.FindAsync(id);
+        public async Task<bool> Delete(int id)
+        {
+            User user = await _dbContext.Users.FindAsync(id);
 
-        //    if (user == null) 
-        //        return false;
+            if (user == null)
+                return false;
 
-        //    if(!user.IsActive)
-        //        return true;
+            _dbContext.Users.Remove(user);
 
-        //    user.IsActive = false;
-
-        //    return await Save();
-        //}
+            return await Save();
+        }
 
         public async Task<IEnumerable<User>> GetAllAsync()
         {

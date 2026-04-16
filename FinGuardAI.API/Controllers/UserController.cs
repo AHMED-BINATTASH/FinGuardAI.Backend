@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using FinGuardAI.API.Utilities;
 using FinGuardAI.Business.Services;
 using FinGuardAI.DataAccess.DTOs;
 using FinGuardAI.DataAccess.Entities;
@@ -28,9 +29,12 @@ namespace FinGuardAI.API.Controllers
             var usersList = await _userService.GetAll();
             if (usersList == null || !usersList.Any())
             {
-                return NotFound("No users found!");
+                return NotFound(ApiResponse<UserDto>.FailureResponse(ResultCode.NotFound));
             }
-            return Ok(_mapper.Map<IEnumerable<UserDto>>(usersList));
+
+            var userDtos = _mapper.Map<IEnumerable<UserDto>>(usersList);
+
+            return Ok(ApiResponse<IEnumerable<UserDto>>.SuccessResponse(userDtos, ResultCode.Found));
         }
 
         [HttpGet("{id}")]
@@ -39,26 +43,29 @@ namespace FinGuardAI.API.Controllers
             var user = await _userService.GetByID(id);
             if (user == null)
             {
-                return NotFound($"User with ID {id} not found.");
+                return NotFound(ApiResponse<UserDto>.FailureResponse(ResultCode.NotFound));
             }
-            return Ok(_mapper.Map<UserDto>(user));
+
+            var userDto = _mapper.Map<UserDto>(user);
+
+            return Ok(ApiResponse<UserDto>.SuccessResponse(userDto,ResultCode.Found));
         }
 
         [HttpPost("Add")]
         public async Task<ActionResult> Add([FromBody] UserAddDTO userDto)
         {
-            if (userDto == null) return BadRequest("Invalid user data.");
+            if (userDto == null) return BadRequest(ApiResponse<UserAddDTO>.FailureResponse(ResultCode.InvalidRequest));
 
             // 1. Check if username already exists
             if (await _userService.IsUsernameExist(userDto.Username))
             {
-                return BadRequest("Username already exists, please choose another one.");
+                return BadRequest(ApiResponse<UserAddDTO>.FailureResponse(ResultCode.AlreadyExists));
             }
 
             // 2. Check if the person is already linked to another user
             if (await _userService.IsPersonExist(userDto.PersonID))
             {
-                return BadRequest("This person is already associated with another user account.");
+                return BadRequest(ApiResponse<UserAddDTO>.FailureResponse(ResultCode.AlreadyExists));
             }
 
             var userEntity = _mapper.Map<User>(userDto);
@@ -66,9 +73,9 @@ namespace FinGuardAI.API.Controllers
             var result = await _userService.AddNew(userEntity);
 
             if (!result)
-                return StatusCode(500, "A problem occurred while handling your request.");
+                return StatusCode(500,ApiResponse<UserAddDTO>.FailureResponse(ResultCode.InternalError));
 
-            return CreatedAtAction(nameof(GetById), new { id = userEntity.Id }, userDto);
+            return CreatedAtAction(nameof(GetById), new { id = userEntity.Id }, ApiResponse<UserAddDTO>.SuccessResponse(userDto, ResultCode.Created));
         }
 
         [HttpPut("Update")]
@@ -77,7 +84,7 @@ namespace FinGuardAI.API.Controllers
             // 1. Ensure UserID is provided
             if (userDto.UserID <= 0)
             {
-                return BadRequest("A valid UserID is required to update data.");
+                return BadRequest(ApiResponse<UserDto>.FailureResponse(ResultCode.BadRequest));
             }
 
             // 2. Find existing user in database
@@ -85,7 +92,7 @@ namespace FinGuardAI.API.Controllers
 
             if (existingUser == null)
             {
-                return NotFound($"User with ID {userDto.UserID} not found.");
+                return NotFound(ApiResponse<UserDto>.FailureResponse(ResultCode.NotFound));
             }
 
             // 3. Map new data from DTO to the existing entity
@@ -96,21 +103,21 @@ namespace FinGuardAI.API.Controllers
 
             if (!success)
             {
-                return StatusCode(500, "An error occurred while updating the user data.");
+                return StatusCode(500, ApiResponse<UserDto>.FailureResponse(ResultCode.InternalError));
             }
 
-            return Ok(new { message = "Updated successfully", id = userDto.UserID });
+            return Ok(ApiResponse<UserDto>.SuccessResponse(userDto, ResultCode.Updated));
         }
 
-        /*
+        
         [HttpDelete("Delete/{id}")]
         public async Task<ActionResult> Delete(int id)
         {
             var success = await _userService.Delete(id);
-            if (!success) return NotFound();
+            if (!success) return NotFound(ApiResponse<UserDto>.FailureResponse(ResultCode.NotFound));
 
-            return Ok(new { message = "Deleted successfully", id = id });
+            return Ok(ApiResponse<UserDto>.SuccessResponse(null, ResultCode.Deleted));
         }
-        */
+       
     }
 }

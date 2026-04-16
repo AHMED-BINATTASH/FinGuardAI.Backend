@@ -1,12 +1,9 @@
 ﻿using AutoMapper;
+using FinGuardAI.API.Utilities;
 using FinGuardAI.Business.Services;
 using FinGuardAI.DataAccess.DTOs;
 using FinGuardAI.DataAccess.Entities;
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
-using System.Threading.Tasks;
 using static FinGuardAI.DataAccess.DTOs.FinancialResponseDTO;
 
 namespace FinGuardAI.API.Controllers
@@ -31,11 +28,12 @@ namespace FinGuardAI.API.Controllers
 
             if (requests == null || !requests.Any())
             {
-                return NotFound("No Financial Requests Found!");
+                return NotFound(ApiResponse<FinancialRequestDto>.FailureResponse(ResultCode.NotFound));
             }
 
             var requestsDto = _mapper.Map<IEnumerable<FinancialRequestDto>>(requests);
-            return Ok(requestsDto);
+
+            return Ok(ApiResponse<IEnumerable<FinancialRequestDto>>.SuccessResponse(requestsDto, ResultCode.Found));
         }
 
         [HttpGet("{id}")]
@@ -45,10 +43,12 @@ namespace FinGuardAI.API.Controllers
 
             if (request == null)
             {
-                return NotFound($"Financial Request with ID {id} not found.");
+                return NotFound(ApiResponse<FinancialRequestDto>.FailureResponse(ResultCode.NotFound));
             }
 
-            return Ok(_mapper.Map<FinancialRequestDto>(request));
+            var requestDto = _mapper.Map<FinancialRequestDto>(request);
+
+            return Ok(ApiResponse<FinancialRequestDto>.SuccessResponse(requestDto, ResultCode.Found));
         }
 
         [HttpPost("Add")]
@@ -65,9 +65,12 @@ namespace FinGuardAI.API.Controllers
             var result = await _financialRequestService.AddNew(requestEntity);
 
             if (!result)
-                return StatusCode(500, "Error saving request.");
+                return StatusCode(500,ApiResponse<FinancialRequestDto>.FailureResponse(ResultCode.InternalError));
 
-            return CreatedAtAction(nameof(GetById), new { id = requestEntity.Id }, requestDto);
+            return CreatedAtAction(
+                nameof(GetById),
+                new { id = requestEntity.Id },
+                ApiResponse<FinancialRequestDto>.SuccessResponse(requestDto, ResultCode.Created));
         }
     
         [HttpPut("Update")]
@@ -75,14 +78,14 @@ namespace FinGuardAI.API.Controllers
         {
             if (requestDto.Id <= 0)
             {
-                return BadRequest("A valid Id is required in the request body.");
+                return BadRequest(ApiResponse<FinancialRequestDto>.FailureResponse(ResultCode.BadRequest));
             }
 
             var existingRequest = await _financialRequestService.GetByID(requestDto.Id);
 
             if (existingRequest == null)
             {
-                return NotFound($"Financial Request with ID {requestDto.Id} not found.");
+                return NotFound(ApiResponse<FinancialRequestDto>.FailureResponse(ResultCode.NotFound));
             }
 
             // نقل البيانات من الـ DTO إلى الـ Entity
@@ -92,10 +95,10 @@ namespace FinGuardAI.API.Controllers
 
             if (!success)
             {
-                return StatusCode(500, "An error occurred while updating the financial request.");
+                return StatusCode(500, ApiResponse<FinancialRequestDto>.FailureResponse(ResultCode.InternalError));
             }
 
-            return Ok(new { message = "Updated successfully", id = requestDto.Id });
+            return Ok(ApiResponse<FinancialRequestDto>.SuccessResponse(requestDto, ResultCode.Updated));
         }
 
         [HttpDelete("Delete")]
@@ -103,9 +106,9 @@ namespace FinGuardAI.API.Controllers
         {
             var success = await _financialRequestService.Delete(id);
 
-            if (!success) return NotFound($"Request with ID {id} not found.");
+            if (!success) return NotFound(ApiResponse<FinancialRequestDto>.FailureResponse(ResultCode.NotFound));
 
-            return Ok(new { message = "Deleted successfully", id = id });
+            return Ok(ApiResponse<FinancialRequestDto>.SuccessResponse(null, ResultCode.Deleted));
         }
     }
 }

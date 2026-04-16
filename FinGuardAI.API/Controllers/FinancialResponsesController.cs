@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using FinGuardAI.API.Utilities;
 using FinGuardAI.Business.Services;
 using FinGuardAI.DataAccess.DTOs;
 using FinGuardAI.DataAccess.Entities;
@@ -26,10 +27,12 @@ namespace FinGuardAI.API.Controllers
             var responses = await _responseService.GetAll();
             if (responses == null || !responses.Any())
             {
-                return NotFound("No Financial Responses Found!");
+                return NotFound(ApiResponse<FinancialResponseDto>.FailureResponse(ResultCode.NotFound));
             }
 
-            return Ok(_mapper.Map<IEnumerable<FinancialResponseDto>>(responses));
+            var responseDtos = _mapper.Map<IEnumerable<FinancialResponseDto>>(responses);
+
+            return Ok(ApiResponse<IEnumerable<FinancialResponseDto>>.SuccessResponse(responseDtos, ResultCode.Found));
         }
 
         [HttpGet("{id}")]
@@ -38,10 +41,11 @@ namespace FinGuardAI.API.Controllers
             var response = await _responseService.GetByID(id);
             if (response == null)
             {
-                return NotFound($"Response with ID {id} not found.");
+                return NotFound(ApiResponse<FinancialResponseDto>.FailureResponse(ResultCode.NotFound));
             }
 
-            return Ok(_mapper.Map<FinancialResponseDto>(response));
+            var responseDto = _mapper.Map<FinancialResponseDto>(response);
+            return Ok(ApiResponse<FinancialResponseDto>.SuccessResponse(responseDto, ResultCode.Found));
         }
 
         [HttpPost("Add")]
@@ -58,37 +62,37 @@ namespace FinGuardAI.API.Controllers
             var result = await _responseService.AddNew(responseEntity);
 
             if (!result)
-                return StatusCode(500, "A problem occurred while saving the response.");
+                return StatusCode(500, ApiResponse<FinancialResponseDto>.FailureResponse(ResultCode.InternalError));
 
             // 4. العودة بالـ DTO المحدث
             //var resultDto = _mapper.Map<FinancialResponseDto>(responseEntity);
-            return CreatedAtAction(nameof(GetById), new { id = responseEntity.Id }, responseDto);
+            return CreatedAtAction(nameof(GetById), new { id = responseEntity.Id }, ApiResponse<FinancialResponseDto>.SuccessResponse(responseDto, ResultCode.Created));
         }
 
         [HttpPut("Update")]
         public async Task<ActionResult> Update([FromBody] FinancialResponseDto responseDto)
         {
             if (responseDto.Id <= 0)
-                return BadRequest("Invalid ID");
+                return BadRequest(ApiResponse<FinancialResponseDto>.FailureResponse(ResultCode.InvalidRequest));
 
             var existingResponse = await _responseService.GetByID(responseDto.Id);
-            if (existingResponse == null) return NotFound();
+            if (existingResponse == null) return NotFound(ApiResponse<FinancialResponseDto>.FailureResponse(ResultCode.NotFound));
 
             _mapper.Map(responseDto, existingResponse);
 
             var success = await _responseService.Update(existingResponse);
-            if (!success) return StatusCode(500, "Update failed.");
+            if (!success) return StatusCode(500, ApiResponse<FinancialResponseDto>.FailureResponse(ResultCode.InternalError));
 
-            return Ok(new { message = "Updated successfully", id = responseDto.Id });
+            return Ok(ApiResponse<FinancialResponseDto>.SuccessResponse(responseDto, ResultCode.Updated));
         }
 
         [HttpDelete("{id}")]
         public async Task<ActionResult> Delete(int id)
         {
             var success = await _responseService.Delete(id);
-            if (!success) return NotFound();
+            if (!success) return NotFound(ApiResponse<FinancialResponseDto>.FailureResponse(ResultCode.NotFound));
 
-            return Ok(new { message = "Deleted successfully", id = id });
+            return Ok(ApiResponse<FinancialResponseDto>.SuccessResponse(null, ResultCode.Deleted));
         }
     }
 }
