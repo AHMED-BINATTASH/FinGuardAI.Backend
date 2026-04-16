@@ -12,8 +12,6 @@ namespace FinGuardAI.Business.Services
     {
         private UserRepository _UserRepository;
 
-
-
         public UserService(UserRepository UserRepository)
         {
             _UserRepository = UserRepository;
@@ -36,10 +34,11 @@ namespace FinGuardAI.Business.Services
         {
             return await _UserRepository.Add(Entity);
         }
-        //async public Task<bool> Delete(int id)
-        //{
-        //    return await _UserRepository.Delete(id);
-        //}
+
+        async public Task<bool> Delete(int id)
+        {
+            return await _UserRepository.Delete(id);
+        }
 
 
         public async Task<bool> Update(User Entity)
