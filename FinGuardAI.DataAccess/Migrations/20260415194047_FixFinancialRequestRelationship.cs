@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace FinGuardAI.DataAccess.Migrations
 {
     /// <inheritdoc />
-    public partial class Edit_Relations : Migration
+    public partial class FixFinancialRequestRelationship : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -47,7 +47,8 @@ namespace FinGuardAI.DataAccess.Migrations
                         name: "FK_Users_People_PersonId",
                         column: x => x.PersonId,
                         principalTable: "People",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -102,8 +103,7 @@ namespace FinGuardAI.DataAccess.Migrations
                 name: "FinancialResponses",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Id = table.Column<int>(type: "int", nullable: false),
                     RequestId = table.Column<int>(type: "int", nullable: false),
                     Decision = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     DecisionClause = table.Column<string>(type: "nvarchar(max)", nullable: false),
@@ -116,8 +116,8 @@ namespace FinGuardAI.DataAccess.Migrations
                 {
                     table.PrimaryKey("PK_FinancialResponses", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_FinancialResponses_FinancialRequests_RequestId",
-                        column: x => x.RequestId,
+                        name: "FK_FinancialResponses_FinancialRequests_Id",
+                        column: x => x.Id,
                         principalTable: "FinancialRequests",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -143,12 +143,6 @@ namespace FinGuardAI.DataAccess.Migrations
                 name: "IX_FinancialResponses_CreatedBy",
                 table: "FinancialResponses",
                 column: "CreatedBy");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_FinancialResponses_RequestId",
-                table: "FinancialResponses",
-                column: "RequestId",
-                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Users_PersonId",

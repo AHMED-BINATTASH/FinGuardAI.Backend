@@ -48,6 +48,8 @@ builder.Services.AddScoped<FinancialRequestRepository>();
 builder.Services.AddScoped<FinancialRequestService>();
 builder.Services.AddScoped<FinancialResponseRepository>();
 builder.Services.AddScoped<FinancialResponseService>();
+builder.Services.AddScoped<UserRepository>();
+builder.Services.AddScoped<UserService>();
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 var app = builder.Build();

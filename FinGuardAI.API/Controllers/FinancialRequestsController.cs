@@ -59,9 +59,6 @@ namespace FinGuardAI.API.Controllers
             // تحويل الـ DTO إلى Entity
             var requestEntity = _mapper.Map<FinancialRequest>(requestDto);
 
-            // --- إسناد الـ User ID يدوياً ---
-            // تأكد أن رقم 1 موجود في جدول Users
-            requestEntity.CreatedBy = 1;
 
             requestEntity.CreatedAt = DateTime.Now;
 
@@ -70,7 +67,7 @@ namespace FinGuardAI.API.Controllers
             if (!result)
                 return StatusCode(500, "Error saving request.");
 
-            return CreatedAtAction(nameof(GetById), new { id = requestEntity.Id }, _mapper.Map<FinancialRequestDto>(requestEntity));
+            return CreatedAtAction(nameof(GetById), new { id = requestEntity.Id }, requestDto);
         }
     
         [HttpPut("Update")]
