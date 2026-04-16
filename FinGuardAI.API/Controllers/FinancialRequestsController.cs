@@ -4,6 +4,7 @@ using FinGuardAI.DataAccess.DTOs;
 using FinGuardAI.DataAccess.Entities;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using static FinGuardAI.DataAccess.DTOs.FinancialResponseDTO;
