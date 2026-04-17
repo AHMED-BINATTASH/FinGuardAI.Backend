@@ -3,6 +3,7 @@ using FinGuardAI.API.Utilities;
 using FinGuardAI.Business.Services;
 using FinGuardAI.DataAccess.DTOs;
 using FinGuardAI.DataAccess.Entities;
+using FinGuardAI.DataAccess.Parameters;
 using Microsoft.AspNetCore.Mvc;
 using static FinGuardAI.DataAccess.DTOs.FinancialResponseDTO;
 
@@ -65,14 +66,14 @@ namespace FinGuardAI.API.Controllers
             var result = await _financialRequestService.AddNew(requestEntity);
 
             if (!result)
-                return StatusCode(500,ApiResponse<FinancialRequestDto>.FailureResponse(ResultCode.InternalError));
+                return StatusCode(500, ApiResponse<FinancialRequestDto>.FailureResponse(ResultCode.InternalError));
 
             return CreatedAtAction(
                 nameof(GetById),
                 new { id = requestEntity.Id },
                 ApiResponse<FinancialRequestDto>.SuccessResponse(requestDto, ResultCode.Created));
         }
-    
+
         [HttpPut("Update")]
         public async Task<ActionResult> Update([FromBody] FinancialRequestDto requestDto)
         {
@@ -109,6 +110,18 @@ namespace FinGuardAI.API.Controllers
             if (!success) return NotFound(ApiResponse<FinancialRequestDto>.FailureResponse(ResultCode.NotFound));
 
             return Ok(ApiResponse<FinancialRequestDto>.SuccessResponse(null, ResultCode.Deleted));
+        }
+
+        [HttpGet("filter")]
+        public async Task<ActionResult<IEnumerable<FinancialRequestDto>>> GetByFilter([FromQuery] RequestFilterParameters filterParams)
+        {
+            var filteredRequests = await _financialRequestService.GetByFilter(filterParams);
+            if (filteredRequests == null || !filteredRequests.Any())
+            {
+                return NotFound(ApiResponse<FinancialRequestDto>.FailureResponse(ResultCode.NotFound));
+            }
+            var filteredRequestsDto = _mapper.Map<IEnumerable<FinancialRequestDto>>(filteredRequests);
+            return Ok(ApiResponse<IEnumerable<FinancialRequestDto>>.SuccessResponse(filteredRequestsDto, ResultCode.Found));
         }
     }
 }

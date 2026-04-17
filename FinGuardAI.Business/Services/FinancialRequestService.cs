@@ -1,4 +1,5 @@
 ﻿using FinGuardAI.DataAccess.Entities;
+using FinGuardAI.DataAccess.Parameters;
 using FinGuardAI.DataAccess.Persistence.Repositories;
 using System;
 using System.Collections.Generic;
@@ -41,6 +42,11 @@ namespace FinGuardAI.Business.Services
         public async Task<bool> Update(FinancialRequest Entity)
         {
             return await _financialRequestRepository.Update(Entity);
+        }
+
+        public async Task<IEnumerable<FinancialRequest>> GetByFilter(RequestFilterParameters filterParams)
+        {
+            return await _financialRequestRepository.GetFilteredRequestsAsync(filterParams);
         }
     }
 }

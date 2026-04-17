@@ -1,10 +1,12 @@
 ﻿using FinGuardAI.DataAccess.Entities;
+using FinGuardAI.DataAccess.Parameters;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static FinGuardAI.DataAccess.Entities.FinancialRequest;
 
 namespace FinGuardAI.DataAccess.Persistence.Repositories
 {
@@ -73,5 +75,114 @@ namespace FinGuardAI.DataAccess.Persistence.Repositories
             return await _dbContext.FinancialRequests
                             .AnyAsync(c => c.Id == FinancialRequestID);
         }
+
+        public async Task<IEnumerable<FinancialRequest>> GetAllRequestsByStatusAsync(string status)
+        {
+            return await _dbContext.FinancialRequests
+                            .Where(c => c.State == status)
+                            .AsNoTracking()
+                            .ToListAsync();
+        }
+
+        public async Task<IEnumerable<FinancialRequest>> GetAllRequestsByUserIdAsync(int userId)
+        {
+            return await _dbContext.FinancialRequests
+                            .Where(c => c.Id == userId)
+                            .AsNoTracking()
+                            .ToListAsync();
+        }
+
+        public async Task<IEnumerable<FinancialRequest>> GetAllRequestsByAmountRangeAsync(decimal minAmount, decimal maxAmount)
+        {
+            return await _dbContext.FinancialRequests
+                            .Where(c => c.Amount >= minAmount && c.Amount <= maxAmount)
+                            .AsNoTracking()
+                            .ToListAsync();
+        }
+        public async Task<IEnumerable<FinancialRequest>> GetAllRequstsByDateRangeAsync(DateTime startDate, DateTime endDate)
+        {
+            return await _dbContext.FinancialRequests
+                            .Where(c => c.CreatedAt >= startDate && c.CreatedAt <= endDate)
+                            .AsNoTracking()
+                            .ToListAsync();
+        }
+
+        public async Task<IEnumerable<FinancialRequest>> GetRequestsByStatusAndAmountRangeAsync(string status, decimal minAmount, decimal maxAmount)
+        {
+            return await _dbContext.FinancialRequests
+                            .Where(c => c.State == status && c.Amount >= minAmount && c.Amount <= maxAmount)
+                            .AsNoTracking()
+                            .ToListAsync();
+
+        }
+        public async Task<IEnumerable<FinancialRequest>> GetRequestsByMaxAmountAsync(decimal maxAmount)
+        {
+            return await _dbContext.FinancialRequests
+                            .Where(c => c.Amount <= maxAmount)
+                            .AsNoTracking()
+                            .ToListAsync();
+        }
+
+        public async Task<IEnumerable<FinancialRequest>> GetRequestsByUserIdAndStatusAsync(int userId, string status)
+        {
+            return await _dbContext.FinancialRequests
+                            .Where(c => c.Id == userId && c.State == status)
+                            .AsNoTracking()
+                            .ToListAsync();
+        }
+        public async Task<IEnumerable<FinancialRequest>> GetRequestsByRequestCategoryTypeAsync(string categoryType)
+        {
+            return await _dbContext.FinancialRequests
+                            .Where(c => c.RequestCategory.ToString() == categoryType)
+                            .AsNoTracking()
+                            .ToListAsync();
+        }
+
+        public async Task<IEnumerable<FinancialRequest>> GetRequestsByStatusAndDateRangeAsync(string status, DateTime startDate, DateTime endDate)
+        {
+            return await _dbContext.FinancialRequests
+                            .Where(c => c.State == status && c.CreatedAt >= startDate && c.CreatedAt <= endDate)
+                            .AsNoTracking()
+                            .ToListAsync();
+        }
+
+
+
+        public async Task<IEnumerable<FinancialRequest>> GetFilteredRequestsAsync(RequestFilterParameters p)
+        {
+          
+            var query = _dbContext.FinancialRequests.AsNoTracking().AsQueryable();
+         
+            if (!string.IsNullOrEmpty(p.Status))
+                query = query.Where(x => x.State == p.Status);
+
+            if (!string.IsNullOrEmpty(p.RequestCategory))
+            {
+                if (Enum.TryParse<Categories>(p.RequestCategory, true, out var categoryEnum))
+                {
+                    query = query.Where(x => x.RequestCategory == categoryEnum);
+                }
+            }
+            
+
+            if (p.CreatedBy.HasValue)
+                query = query.Where(x => x.CreatedBy == p.CreatedBy);
+
+            if (p.MinAmount.HasValue)
+                query = query.Where(x => x.Amount >= p.MinAmount);
+
+            if (p.MaxAmount.HasValue)
+                query = query.Where(x => x.Amount <= p.MaxAmount);
+
+            if (p.StartDate.HasValue)
+                query = query.Where(x => x.CreatedAt >= p.StartDate);
+
+            if (p.EndDate.HasValue)
+                query = query.Where(x => x.CreatedAt <= p.EndDate);
+
+          
+            return await query.ToListAsync();
+        }
+
     }
 }
