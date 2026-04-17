@@ -1,5 +1,7 @@
 ﻿using FinGuardAI.DataAccess.Entities;
+using FinGuardAI.DataAccess.Parameters;
 using Microsoft.EntityFrameworkCore;
+using System.Diagnostics.Contracts;
 
 namespace FinGuardAI.DataAccess.Persistence.Repositories
 {
@@ -57,7 +59,7 @@ namespace FinGuardAI.DataAccess.Persistence.Repositories
             return await Save();
         }
 
-     
+
         public async Task<bool> Save()
         {
             return await _dbContext.SaveChangesAsync() > 0;
@@ -69,6 +71,38 @@ namespace FinGuardAI.DataAccess.Persistence.Repositories
 
             return await _dbContext.FinancialResponses
                             .AnyAsync(c => c.Id == FinancialResponseID);
+        }
+
+   
+        public async Task<IEnumerable<FinancialResponse>> GetFilteredResponsesAsync(ResponseFilterParameters p)
+        {
+         
+            var query = _dbContext.FinancialResponses.AsNoTracking().AsQueryable();
+
+         
+            if (!string.IsNullOrEmpty(p.Decision))
+                query = query.Where(x => x.Decision == p.Decision);
+
+            if (p.RequestId.HasValue)
+                query = query.Where(x => x.RequestId == p.RequestId);
+
+            if (p.CreatedBy.HasValue)
+                query = query.Where(x => x.CreatedBy == p.CreatedBy);
+
+            if (p.MinAcceptedAmount.HasValue)
+                query = query.Where(x => x.AcceptedAmount >= p.MinAcceptedAmount);
+
+            if (p.MaxAcceptedAmount.HasValue)
+                query = query.Where(x => x.AcceptedAmount <= p.MaxAcceptedAmount);
+
+            if (p.StartDate.HasValue)
+                query = query.Where(x => x.CreatedAt >= p.StartDate);
+
+            if (p.EndDate.HasValue)
+                query = query.Where(x => x.CreatedAt <= p.EndDate);
+
+            
+            return await query.ToListAsync();
         }
     }
 }

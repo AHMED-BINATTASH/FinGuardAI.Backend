@@ -1,5 +1,6 @@
 ﻿using Azure;
 using FinGuardAI.DataAccess.Entities;
+using FinGuardAI.DataAccess.Parameters;
 using FinGuardAI.DataAccess.Persistence.Repositories;
 using System;
 using System.Collections.Generic;
@@ -46,6 +47,9 @@ namespace FinGuardAI.Business.Services
             return await _financialResponseRepository.Update(Entity);
         }
 
-    
+        public async Task<IEnumerable<FinancialResponse>> GetByFilter(ResponseFilterParameters filterParams)
+        {
+            return await _financialResponseRepository.GetFilteredResponsesAsync(filterParams);
+        }
     }
 }

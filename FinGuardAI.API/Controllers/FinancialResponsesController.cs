@@ -3,6 +3,7 @@ using FinGuardAI.API.Utilities;
 using FinGuardAI.Business.Services;
 using FinGuardAI.DataAccess.DTOs;
 using FinGuardAI.DataAccess.Entities;
+using FinGuardAI.DataAccess.Parameters;
 using Microsoft.AspNetCore.Mvc;
 using static FinGuardAI.DataAccess.DTOs.FinancialResponseDTO;
 
@@ -93,6 +94,18 @@ namespace FinGuardAI.API.Controllers
             if (!success) return NotFound(ApiResponse<FinancialResponseDto>.FailureResponse(ResultCode.NotFound));
 
             return Ok(ApiResponse<FinancialResponseDto>.SuccessResponse(null, ResultCode.Deleted));
+        }
+
+        [HttpGet("filter")]
+        public async Task<ActionResult<IEnumerable<FinancialResponseDto>>> GetByFilter([FromQuery] ResponseFilterParameters filterParams)
+        {
+            var filteredRequests = await _responseService.GetByFilter(filterParams);
+            if (filteredRequests == null || !filteredRequests.Any())
+            {
+                return NotFound(ApiResponse<FinancialResponseDto>.FailureResponse(ResultCode.NotFound));
+            }
+            var filteredRequestsDto = _mapper.Map<IEnumerable<FinancialResponseDto>>(filteredRequests);
+            return Ok(ApiResponse<IEnumerable<FinancialResponseDto>>.SuccessResponse(filteredRequestsDto, ResultCode.Found));
         }
     }
 }
