@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace FinGuardAI.DataAccess.Migrations
 {
     /// <inheritdoc />
-    public partial class FixFinancialRequestRelationship : Migration
+    public partial class FixResponseIdIdentity : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -103,7 +103,8 @@ namespace FinGuardAI.DataAccess.Migrations
                 name: "FinancialResponses",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false),
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     RequestId = table.Column<int>(type: "int", nullable: false),
                     Decision = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     DecisionClause = table.Column<string>(type: "nvarchar(max)", nullable: false),
@@ -116,8 +117,8 @@ namespace FinGuardAI.DataAccess.Migrations
                 {
                     table.PrimaryKey("PK_FinancialResponses", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_FinancialResponses_FinancialRequests_Id",
-                        column: x => x.Id,
+                        name: "FK_FinancialResponses_FinancialRequests_RequestId",
+                        column: x => x.RequestId,
                         principalTable: "FinancialRequests",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -143,6 +144,12 @@ namespace FinGuardAI.DataAccess.Migrations
                 name: "IX_FinancialResponses_CreatedBy",
                 table: "FinancialResponses",
                 column: "CreatedBy");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_FinancialResponses_RequestId",
+                table: "FinancialResponses",
+                column: "RequestId",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Users_PersonId",

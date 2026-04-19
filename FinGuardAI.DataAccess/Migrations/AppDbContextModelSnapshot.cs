@@ -107,7 +107,10 @@ namespace FinGuardAI.DataAccess.Migrations
             modelBuilder.Entity("FinGuardAI.DataAccess.Entities.FinancialResponse", b =>
                 {
                     b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("AcceptedAmount")
                         .HasColumnType("decimal(18,2)");
@@ -139,6 +142,9 @@ namespace FinGuardAI.DataAccess.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CreatedBy");
+
+                    b.HasIndex("RequestId")
+                        .IsUnique();
 
                     b.ToTable("FinancialResponses", (string)null);
                 });
@@ -253,7 +259,7 @@ namespace FinGuardAI.DataAccess.Migrations
 
                     b.HasOne("FinGuardAI.DataAccess.Entities.FinancialRequest", "Request")
                         .WithOne("Response")
-                        .HasForeignKey("FinGuardAI.DataAccess.Entities.FinancialResponse", "Id")
+                        .HasForeignKey("FinGuardAI.DataAccess.Entities.FinancialResponse", "RequestId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
